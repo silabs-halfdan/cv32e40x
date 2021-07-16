@@ -264,6 +264,15 @@ module cv32e40x_alu import cv32e40x_pkg::*;
      .result_o  (cpop_result_o));
 
   /////////////////////////////////
+  //  carryless multiplication   //
+  /////////////////////////////////
+
+  cv32e40x_alu_b_clmul alu_b_clmul_i
+    (.op_a_i (operand_a_i),
+     .op_b_i (operand_b_i),
+     .result_o  (cpop_result_o));
+
+  /////////////////////////////////
   //    min/max instructions     //
   /////////////////////////////////
   logic [31:0]  min_result;
