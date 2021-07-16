@@ -300,8 +300,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
       ALU_SUB : result_o = adder_result;
 
       // Shift Operations
-      ALU_SLL,
-      ALU_SRL, ALU_SRA:  result_o = shifter_result;
+      ALU_SHIFT: result_o = shifter_result;
 
       // Non-vector comparisons
       ALU_SLTS,  ALU_SLTU: result_o = {31'b0, comparison_result_o};
@@ -333,8 +332,6 @@ module cv32e40x_alu import cv32e40x_pkg::*;
                                         operand_a_i[15:8],
                                         operand_a_i[23:16],
                                         operand_a_i[31:24]};
-      ALU_B_ROL,
-      ALU_B_ROR:            result_o = shifter_result;
 
       ALU_B_SEXT_B:         result_o = {{(24){operand_a_i[ 7]}}, operand_a_i[ 7:0]};
       ALU_B_SEXT_H:         result_o = {{(16){operand_a_i[15]}}, operand_a_i[15:0]};

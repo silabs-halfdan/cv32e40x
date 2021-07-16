@@ -127,18 +127,13 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
           {7'b0110000, 3'b001}: begin // Rotate Left (rol)
             if (RV32B_ZBB) begin
               decoder_ctrl_o.illegal_insn               = 1'b0;
-              decoder_ctrl_o.alu_operator               = ALU_B_ROL;
-              decoder_ctrl_o.alu_shifter.rotate         = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
+              decoder_ctrl_o.alu_operator               = ALU_SHIFT;
             end
           end
           {7'b0110000, 3'b101}: begin // Rotate Right (ror)
             if (RV32B_ZBB) begin
               decoder_ctrl_o.illegal_insn               = 1'b0;
-              decoder_ctrl_o.alu_operator               = ALU_B_ROR;
-              decoder_ctrl_o.alu_shifter.rotate         = 1'b1;
-              decoder_ctrl_o.alu_shifter.rshift         = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
+              decoder_ctrl_o.alu_operator               = ALU_SHIFT;
             end
           end
 
@@ -147,33 +142,24 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
             if (RV32B_ZBS) begin
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BSET;
-              decoder_ctrl_o.alu_shifter.rotate         = 1'b1;
-              decoder_ctrl_o.alu_shifter.operand_tieoff = 1'b1;
             end
           end
           {7'b0100100, 3'b001}: begin // Clear bit in rs1 at index specified by rs2 (bclr)
             if (RV32B_ZBS) begin
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BCLR;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
-              decoder_ctrl_o.alu_shifter.operand_tieoff = 1'b1;
             end
           end
           {7'b0110100, 3'b001}: begin // Invert bit in rs1 at index specified by rs2 (binv)
             if (RV32B_ZBS) begin
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BINV;
-              decoder_ctrl_o.alu_shifter.rotate         = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
-              decoder_ctrl_o.alu_shifter.operand_tieoff = 1'b1;
             end
           end
           {7'b0100100, 3'b101}: begin // Extract bit from rs1 at index specified by rs2 (bext)
             if (RV32B_ZBS) begin
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BEXT;
-              decoder_ctrl_o.alu_shifter.rshift         = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
             end
           end
 
@@ -237,11 +223,8 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
           {7'b0110000, 5'b?_????, 3'b101}: begin // Rotate Right immediate (rori)
             if (RV32B_ZBB) begin
               decoder_ctrl_o.illegal_insn           = 1'b0;
-              decoder_ctrl_o.alu_operator           = ALU_B_ROR;
+              decoder_ctrl_o.alu_operator           = ALU_SHIFT;
               decoder_ctrl_o.alu_op_b_mux_sel       = OP_B_IMM;
-              decoder_ctrl_o.alu_shifter.rotate     = 1'b1;
-              decoder_ctrl_o.alu_shifter.rshift     = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic = 1'b1;
             end
           end
 
@@ -251,8 +234,6 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BSET;
               decoder_ctrl_o.alu_op_b_mux_sel           = OP_B_IMM;
-              decoder_ctrl_o.alu_shifter.rotate         = 1'b1;
-              decoder_ctrl_o.alu_shifter.operand_tieoff = 1'b1;
             end
           end
           {7'b0100100, 5'b?_????, 3'b001}: begin // Clear bit in rs1 at index specified by immediate (bclri)
@@ -260,8 +241,6 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BCLR;
               decoder_ctrl_o.alu_op_b_mux_sel           = OP_B_IMM;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
-              decoder_ctrl_o.alu_shifter.operand_tieoff = 1'b1;
             end
           end
           {7'b0110100, 5'b?_????, 3'b001}: begin // Invert bit in rs1 at index specified by immediate (binvi)
@@ -269,9 +248,6 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
               decoder_ctrl_o.illegal_insn               = 1'b0;
               decoder_ctrl_o.alu_operator               = ALU_B_BINV;
               decoder_ctrl_o.alu_op_b_mux_sel           = OP_B_IMM;
-              decoder_ctrl_o.alu_shifter.rotate         = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic     = 1'b1;
-              decoder_ctrl_o.alu_shifter.operand_tieoff = 1'b1;
             end
           end
           {7'b0100100, 5'b?_????, 3'b101}: begin // Extract bit from rs1 at index specified by immediate (bexti)
@@ -279,8 +255,6 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
               decoder_ctrl_o.illegal_insn           = 1'b0;
               decoder_ctrl_o.alu_operator           = ALU_B_BEXT;
               decoder_ctrl_o.alu_op_b_mux_sel       = OP_B_IMM;
-              decoder_ctrl_o.alu_shifter.rshift     = 1'b1;
-              decoder_ctrl_o.alu_shifter.arithmetic = 1'b1;
             end
           end
 
