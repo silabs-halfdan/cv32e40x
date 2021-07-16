@@ -237,7 +237,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   logic        ff_no_one;  // if no ones are found
   logic [ 5:0] cpop_result_o;
 
-  assign clz_data_in = (operator_i == ALU_B_CTZ) ? div_clz_data_i : div_clz_data_rev;
+  assign clz_data_in = (operator_i == ALU_B_CTZ) ?  div_clz_data_rev : div_clz_data_i;
 
   generate
     genvar l;
