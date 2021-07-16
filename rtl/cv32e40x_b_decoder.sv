@@ -208,7 +208,7 @@ module cv32e40x_b_decoder import cv32e40x_pkg::*;
               decoder_ctrl_o.alu_operator = ALU_B_CPOP;
             end
           end
-
+          
           {7'b001_0100, 5'b0_0111, 3'b101}: begin
             if (RV32B_ZBB) begin
               decoder_ctrl_o.illegal_insn = 1'b0;
