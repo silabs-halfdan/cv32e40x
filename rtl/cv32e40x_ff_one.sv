@@ -14,6 +14,7 @@
 //                                                                            //
 // Additional contributions by:                                               //
 //                 Davide Schiavone - pschiavo@iis.ee.ethz.ch                 //
+//                 Kristine Dosvik  - kristine.dosvik@silabs.com              //
 //                                                                            //
 // Design Name:    cv32e40x_ff_one                                            //
 // Project Name:   RI5CY                                                      //
