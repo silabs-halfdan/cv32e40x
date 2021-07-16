@@ -76,7 +76,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   // /_/   \_\__,_|\__,_|\___|_|    //
   //                                //
   ////////////////////////////////////
-
+  
   // Adder is used for:
   //
   // - ALU_ADD, ALU_SUB
@@ -115,7 +115,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   //
   // - DIV_DIVU, DIV_DIVU, DIV_REM, DIV_REMU
 
-  logic [5:0]  shifter_shamt;           // Shift amount
+  logic [5:0]  shifter_shamt;  // Shift amount
   logic        shifter_rshift;          // Shift right
   logic [31:0] shifter_aa, shifter_bb;
   logic [63:0] shifter_tmp;
@@ -151,7 +151,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
       ALU_B_BCLR,
       ALU_B_BINV : begin
         shifter_aa = 32'h1;
-      end
+    end
       default: ;
     endcase
   end
@@ -224,7 +224,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
 
   //////////////////////////////////////////////////////////////////
   // Min/max
-  
+
   logic [31:0] min_minu_result;
   logic [31:0] max_maxu_result;
 
@@ -300,15 +300,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
       ALU_SUB : result_o = adder_result;
 
       // Shift Operations
-      ALU_SLL,
-      ALU_SRL,
-      ALU_SRA,
-      ALU_B_ROL,
-      ALU_B_ROR,
-      ALU_B_BSET,
-      ALU_B_BCLR,
-      ALU_B_BINV,
-      ALU_B_BEXT   : result_o = shifter_result;
+      ALU_SHIFT: result_o = shifter_result;
 
       // Comparisons
       ALU_SLT, ALU_SLTU: result_o = {31'b0, !(is_greater || is_equal)};
