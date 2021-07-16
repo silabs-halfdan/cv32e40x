@@ -36,6 +36,7 @@
 //                 Michael Gautschi - gautschi@iis.ee.ethz.ch                 //
 //                 Davide Schiavone - pschiavo@iis.ee.ethz.ch                 //
 //                 Halfdan Bechmann - halfdan.bechmann@silabs.com             //
+//                 Kristine Dosvik  - kristine.dosvik@silabs.com              //
 //                                                                            //
 // Design Name:    ALU                                                        //
 // Project Name:   RI5CY                                                      //
@@ -256,12 +257,14 @@ module cv32e40x_alu import cv32e40x_pkg::*;
 
   // Divider assumes CLZ returning 32 when there are no zeros (as per CLZ spec)
   assign div_clz_result_o = ff_no_one ? 6'd32 : ff1_result;
- 
 
   // CPOP
-  cv32e40x_alu_b_cpop alu_b_cpop_i
-    (.operand_i (operand_a_i),
-     .result_o  (cpop_result_o));
+  always_comb begin
+    cpop_result_o = '0;
+    foreach(operand_a_i[idx]) begin
+      cpop_result_o += operand_a_i[idx];
+    end
+  end
 
   /////////////////////////////////
   //    min/max instructions     //
