@@ -236,6 +236,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   logic [4:0]  ff1_result; // holds the index of the first '1'
   logic        ff_no_one;  // if no ones are found
   logic [ 5:0] cpop_result_o;
+  //logic [31:0]  clmul_result;
 
   assign clz_data_in = (operator_i == ALU_B_CTZ) ?  div_clz_data_rev : div_clz_data_i;
 
@@ -266,12 +267,12 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   /////////////////////////////////
   //  carryless multiplication   //
   /////////////////////////////////
-
+/*
   cv32e40x_alu_b_clmul alu_b_clmul_i
     (.op_a_i (operand_a_i),
      .op_b_i (operand_b_i),
-     .result_o  (cpop_result_o));
-
+     .result_o  (clmul_result));
+*/
   /////////////////////////////////
   //    min/max instructions     //
   /////////////////////////////////
@@ -343,16 +344,20 @@ module cv32e40x_alu import cv32e40x_pkg::*;
                                         operand_a_i[23:16],
                                         operand_a_i[31:24]};
       ALU_B_ROL,
-      ALU_B_ROR:            result_o = shifter_result;
+        ALU_B_ROR:            result_o = shifter_result;
 
-      ALU_B_SEXT_B:         result_o = {{(24){operand_a_i[ 7]}}, operand_a_i[ 7:0]};
-      ALU_B_SEXT_H:         result_o = {{(16){operand_a_i[15]}}, operand_a_i[15:0]};
+      ALU_B_SEXT_B:         result_o   = {{(24){operand_a_i[ 7]}}, operand_a_i[ 7:0]};
+      ALU_B_SEXT_H:         result_o   = {{(16){operand_a_i[15]}}, operand_a_i[15:0]};
 
       // Zbs
-      ALU_B_BSET:           result_o = shifter_bset_result;
-      ALU_B_BCLR:           result_o = shifter_bclr_result;
-      ALU_B_BINV:           result_o = shifter_binv_result;
-      ALU_B_BEXT:           result_o = shifter_bext_result;
+      ALU_B_BSET:           result_o   = shifter_bset_result;
+      ALU_B_BCLR:           result_o   = shifter_bclr_result;
+      ALU_B_BINV:           result_o   = shifter_binv_result;
+      ALU_B_BEXT:           result_o   = shifter_bext_result;
+
+      // Zbc
+      //ALU_CLMUL:           result_o    = clmul_result;
+      
 
       default: ; // default case to suppress unique warning
     endcase
