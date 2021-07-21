@@ -114,20 +114,24 @@ typedef enum logic [ALU_OP_WIDTH-1:0]
  ALU_B_BSET   = 6'b110011,
  ALU_B_BCLR   = 6'b110100,
  ALU_B_BINV   = 6'b110101,
- ALU_B_BEXT   = 6'b110110,
+ ALU_B_BEXT   = 6'b110110
 
  //B, Zbc
- ALU_B_CLMUL  = 6'b110111
+ //ALU_B_CLMUL  = 6'b110111
 
 } alu_opcode_e;
 
 
-parameter MUL_OP_WIDTH = 1;
+parameter MUL_OP_WIDTH = 2;
 
 typedef enum logic [MUL_OP_WIDTH-1:0]
 {
- MUL_M32 = 1'b0,
- MUL_H   = 1'b1
+ MUL_M32     = 2'b00,
+ MUL_H       = 2'b01,
+ 
+ //B, Zbc
+ MUL_B_CLMUL = 2'b10
+
  } mul_opcode_e;
 
 parameter DIV_OP_WIDTH = 2;

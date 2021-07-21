@@ -195,6 +195,75 @@ module cv32e40x_mult import cv32e40x_pkg::*;
 
   assign int_result = $signed(op_a) * $signed(op_b);
 
+  ///////////////////////////
+  // carryless multiplier  //
+  ///////////////////////////
+
+  logic [31:0] clmul_result;
+/*
+ //YoutubeBetter
+  logic [63:0] clmul_temp;
+ 
+  always_comb begin
+    clmul_temp = {'0, op_b_i};
+    for(integer i = 0; i < 32; i++) begin
+      clmul_temp[63:32] = (clmul_temp[0]) ? clmul_temp[63:32] ^ op_a_i : clmul_temp[63:32];
+      clmul_temp = clmul_temp >> 1;
+    end
+  end
+  assign clmul_result = clmul_temp[32:0];
+
+  
+  //ISA
+  always_comb begin
+    clmul_result = '0;
+    for (integer i = 0; i < 32; i++) begin
+      if(op_a_i[i]) begin
+        clmul_result = clmul_result ^ (op_b_i << i);
+      end
+    end
+  end
+
+ 
+ //Wikipedia
+ always_comb begin
+    clmul_result = 32'h00000000;
+    for (integer i = 0; i < 32; i++) begin
+      for (integer j = 0; j < i+1; j++) begin
+        clmul_result[i] = clmul_result[i] ^ (op_a_i[i-j] & op_b_i[j]);     
+      end
+    end
+  end
+*/
+
+   logic [31:0] clmul_and_stage[32];
+   logic [31:0] clmul_xor_stage1[16];
+   logic [31:0] clmul_xor_stage2[8];
+   logic [31:0] clmul_xor_stage3[4];
+   logic [31:0] clmul_xor_stage4[2];
+
+for (genvar i=0; i<32; i++) begin : gen_clmul_and_op
+  assign clmul_and_stage[i] = op_b_i[i] ? op_a_i << i : '0;
+      end
+
+      for (genvar i=0; i<16; i++) begin : gen_clmul_xor_op_l1
+        assign clmul_xor_stage1[i] = clmul_and_stage[2*i] ^ clmul_and_stage[2*i+1];
+      end
+
+      for (genvar i=0; i<8; i++) begin : gen_clmul_xor_op_l2
+        assign clmul_xor_stage2[i] = clmul_xor_stage1[2*i] ^ clmul_xor_stage1[2*i+1];
+      end
+
+      for (genvar i=0; i<4; i++) begin : gen_clmul_xor_op_l3
+        assign clmul_xor_stage3[i] = clmul_xor_stage2[2*i] ^ clmul_xor_stage2[2*i+1];
+      end
+
+      for (genvar i=0; i<2; i++) begin : gen_clmul_xor_op_l4
+        assign clmul_xor_stage4[i] = clmul_xor_stage3[2*i] ^ clmul_xor_stage3[2*i+1];
+      end
+
+      assign clmul_result = clmul_xor_stage4[0] ^ clmul_xor_stage4[1]; 
+
   ////////////////////////////////////
   //   ____                 _ _     //
   //  |  _ \ ___  ___ _   _| | |_   //
@@ -207,6 +276,6 @@ module cv32e40x_mult import cv32e40x_pkg::*;
   // 34bit Adder - mulh_acc is always 0 for the MUL instruction
   assign result   = $signed(int_result) + $signed(mulh_acc);
 
-  assign result_o = result[31:0];
+  assign result_o = (operator_i == MUL_B_CLMUL) ? clmul_result : result[31:0];
 
 endmodule

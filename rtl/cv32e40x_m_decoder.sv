@@ -50,6 +50,14 @@ module cv32e40x_m_decoder import cv32e40x_pkg::*;
 
         unique case ({instr_rdata_i[31:25], instr_rdata_i[14:12]})
 
+          //Zbc
+          {7'b000_0101, 3'b001} : begin // Carryless mulitplication (clmul)
+            decoder_ctrl_o.illegal_insn    = 1'b0;
+            decoder_ctrl_o.mul_signed_mode = 2'b11;
+            decoder_ctrl_o.mul_en          = 1'b1;
+            decoder_ctrl_o.mul_operator    = MUL_B_CLMUL;
+          end
+          
           // supported RV32M instructions
           {7'b000_0001, 3'b000}: begin // mul
             decoder_ctrl_o.illegal_insn  = 1'b0;
