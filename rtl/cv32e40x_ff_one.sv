@@ -1,3 +1,4 @@
+
 // Copyright 2018 ETH Zurich and University of Bologna.
 // Copyright and related rights are licensed under the Solderpad Hardware
 // License, Version 0.51 (the "License"); you may not use this file except in
@@ -32,67 +33,48 @@ module cv32e40x_ff_one
   output logic [$clog2(LEN)-1:0] first_one_o,
   output logic                   no_ones_o
 );
-
-  localparam NUM_LEVELS = $clog2(LEN);
-
-  logic [LEN-1:0] [NUM_LEVELS-1:0]           index_lut;
-  logic [2**NUM_LEVELS-1:0]                  sel_nodes;
-  logic [2**NUM_LEVELS-1:0] [NUM_LEVELS-1:0] index_nodes;
-
-
-  //////////////////////////////////////////////////////////////////////////////
-  // generate tree structure
-  //////////////////////////////////////////////////////////////////////////////
-
-  generate
-    genvar j;
-    for (j = 0; j < LEN; j++) begin : gen_index_lut
-      assign index_lut[j] = $unsigned(j);
-    end
-  endgenerate
-
-  generate
-    genvar k;
-    genvar l;
-    genvar level;
-    for (level = 0; level < NUM_LEVELS; level++) begin : gen_tree
-    //------------------------------------------------------------
-    if (level < NUM_LEVELS-1) begin : gen_non_root_level
-      for (l = 0; l < 2**level; l++) begin : gen_node
-        assign sel_nodes[2**level-1+l]   = sel_nodes[2**(level+1)-1+l*2] | sel_nodes[2**(level+1)-1+l*2+1];
-        assign index_nodes[2**level-1+l] = (sel_nodes[2**(level+1)-1+l*2] == 1'b1) ?
-                                           index_nodes[2**(level+1)-1+l*2] : index_nodes[2**(level+1)-1+l*2+1];
-      end
-    end
-    //------------------------------------------------------------
-    if (level == NUM_LEVELS-1) begin : gen_root_level
-      for (k = 0; k < 2**level; k++) begin : gen_node
-        // if two successive indices are still in the vector...
-        if (k * 2 < LEN-1) begin : gen_two
-          assign sel_nodes[2**level-1+k]   = in_i[k*2] | in_i[k*2+1];
-          assign index_nodes[2**level-1+k] = (in_i[k*2] == 1'b1) ? index_lut[k*2] : index_lut[k*2+1];
-        end
-        // if only the first index is still in the vector...
-        if (k * 2 == LEN-1) begin: gen_one
-          assign sel_nodes[2**level-1+k]   = in_i[k*2];
-          assign index_nodes[2**level-1+k] = index_lut[k*2];
-        end
-        // if index is out of range
-        if (k * 2 > LEN-1) begin : gen_out_of_range
-          assign sel_nodes[2**level-1+k]   = 1'b0;
-          assign index_nodes[2**level-1+k] = '0;
-        end
-      end
-    end
-    //------------------------------------------------------------
-    end
-  endgenerate
-
-  //////////////////////////////////////////////////////////////////////////////
-  // connect output
-  //////////////////////////////////////////////////////////////////////////////
-
-  assign first_one_o = index_nodes[0];
-  assign no_ones_o   = ~sel_nodes[0];
+  
+  logic [LEN/2**1-1:0] s3;
+  logic [LEN/2**2-1:0] s2;
+  logic [LEN/2**3-1:0] s1;
+  logic [LEN/2**4-1:0] s0;
+  
+  always_comb begin
+    
+    if(in_i[31:16] == 16'h0000) begin
+      first_one_o[4] = 1;
+      s3 = in_i[15:0]; end
+    else begin
+      first_one_o[4] = 0;
+      s3 = in_i[31:16];
+    end //if
+    
+    if(s3[15:8] == 8'h00) begin
+      first_one_o[3] = 1;
+      s2 = s3[7:0]; end
+    else begin
+      first_one_o[3] = 0;
+      s2 = s3[15:8];
+    end //if
+    
+    if(s2[7:4] == 4'h0) begin
+      first_one_o[2] = 1;
+      s1 = s2[3:0]; end
+    else begin
+      first_one_o[2] = 0;
+      s1 = s2[7:4];
+    end //if
+    
+    if(s1[3:2] == 2'b00) begin
+      first_one_o[1] = 1;
+      s0 = s1[1:0]; end
+    else begin
+      first_one_o[1] = 0;
+      s0 = s1[3:2];
+    end //if
+   
+    first_one_o[0] = !s0[1];
+  end //always
+  assign no_ones_o = &first_one_o & !in_i;
 
 endmodule
