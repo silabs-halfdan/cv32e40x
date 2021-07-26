@@ -199,7 +199,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   logic is_greater;     // handles both signed and unsigned forms
   logic cmp_signed;
 
-  assign cmp_signed = (operator_i == ALU_GES) || (operator_i == ALU_LTS) || (operator_i == ALU_SLTS);
+  assign cmp_signed = (operator_i == ALU_GES) || (operator_i == ALU_LTS) || (operator_i == ALU_SLTS) || (operator_i == ALU_B_MIN) || (operator_i == ALU_B_MAX);
   assign is_equal = (operand_a_i == operand_b_i);
   assign is_greater = $signed({operand_a_i[31] & cmp_signed, operand_a_i}) > $signed({operand_b_i[31] & cmp_signed, operand_b_i});
 
@@ -221,6 +221,16 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   end
 
   assign comparison_result_o = cmp_result;
+
+  /////////////////////////////////
+  //    min/max instructions     //
+  /////////////////////////////////
+  
+  logic [31:0] min_minu_result;
+  logic [31:0] max_maxu_result;
+
+  assign min_minu_result = (!is_greater) ? operand_a_i : operand_b_i;
+  assign max_maxu_result = (is_greater) ? operand_a_i : operand_b_i;
 
   /////////////////////////////////////////////////////////////////////
   //   ____  _ _      ____                  _      ___               //
@@ -263,19 +273,6 @@ module cv32e40x_alu import cv32e40x_pkg::*;
     (.operand_i (operand_a_i),
      .result_o  (cpop_result_o));
 
-  /////////////////////////////////
-  //    min/max instructions     //
-  /////////////////////////////////
-  logic [31:0]  min_result;
-  logic [31:0]  minu_result;
-  logic [31:0]  max_result;
-  logic [31:0]  maxu_result;
-
-  assign min_result  = (  $signed(operand_a_i) <   $signed(operand_b_i)) ? operand_a_i : operand_b_i;
-  assign minu_result = ($unsigned(operand_a_i) < $unsigned(operand_b_i)) ? operand_a_i : operand_b_i;
-  assign max_result  = (  $signed(operand_a_i) >   $signed(operand_b_i)) ? operand_a_i : operand_b_i;
-  assign maxu_result = ($unsigned(operand_a_i) > $unsigned(operand_b_i)) ? operand_a_i : operand_b_i;
-
   ////////////////////////////////////////////////////////
   //   ____                 _ _     __  __              //
   //  |  _ \ ___  ___ _   _| | |_  |  \/  |_   ___  __  //
@@ -315,13 +312,13 @@ module cv32e40x_alu import cv32e40x_pkg::*;
       // Zbb
       ALU_B_CLZ, ALU_B_CTZ: result_o = {26'h0, div_clz_result_o};
       ALU_B_CPOP:           result_o = {26'h0, cpop_result_o};
-      ALU_B_MIN:            result_o = min_result;
-      ALU_B_MINU:           result_o = minu_result;
-      ALU_B_MAX:            result_o = max_result;
-      ALU_B_MAXU:           result_o = maxu_result;
 
+      ALU_B_MIN, ALU_B_MINU:  result_o = min_minu_result;
+      ALU_B_MAX, ALU_B_MAXU:  result_o = max_maxu_result;
+      
       ALU_B_ANDN:           result_o = operand_a_i & ~operand_b_i;
       ALU_B_ORN:            result_o = operand_a_i | ~operand_b_i;
+
       ALU_B_XNOR:           result_o = operand_a_i ^ ~operand_b_i;
 
       ALU_B_ORC_B:          result_o = {{(8){|operand_a_i[31:24]}},
