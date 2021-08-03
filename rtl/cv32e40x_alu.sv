@@ -119,25 +119,28 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   logic        shifter_rshift;          // Shift right
   logic [31:0] shifter_aa, shifter_bb;
   logic [63:0] shifter_tmp;
+  logic [31:0] shifter_tmp_rev;
   logic [31:0] shifter_result;
+  logic [31:0] operand_a_rev;
 
   assign shifter_rshift = operator_i[2];
 
   assign div_op_a_shifted_o = shifter_result;
 
-  always_comb begin
-    shifter_shamt = div_shift_en_i ? {1'b0, div_shift_amt_i[4:0]} : {1'b0, operand_b_i[4:0]};
-
-    if (shifter_rshift) begin
-      // Treat right shifts as left shifts with corrected shift amount
-      shifter_shamt = -shifter_shamt;
+  generate
+    genvar i;
+    for(i = 0; i < 32; i++)
+    begin : gen_operand_a_rev
+      assign operand_a_rev[i]   = operand_a_i[31-i];
+      assign shifter_tmp_rev[i] = shifter_tmp[31-i];
     end
-  end
+  endgenerate
 
   always_comb begin
     // Defaults (ALU_SLL, ALU_SRL, ALU_B_BEXT, DIV_DIVU, DIV_DIVU, DIV_REM, DIV_REMU)
-    shifter_aa = operand_a_i;
+    shifter_aa = (shifter_rshift) ? operand_a_rev : operand_a_i;
     shifter_bb = 32'h0;
+    shifter_shamt = div_shift_en_i ? {1'b0, div_shift_amt_i[4:0]} : {1'b0, operand_b_i[4:0]};
 
     unique case (operator_i)
       ALU_SRA : begin
@@ -145,7 +148,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
       end
       ALU_B_ROL,
       ALU_B_ROR : begin
-        shifter_bb = operand_a_i;
+        shifter_bb = (shifter_rshift) ? operand_a_rev : operand_a_i;
       end
       ALU_B_BSET,
       ALU_B_BCLR,
@@ -167,10 +170,10 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   end
 
   always_comb begin
-    shifter_result = shifter_tmp[31:0];
+    shifter_result = (shifter_rshift) ?  shifter_tmp_rev : shifter_tmp[31:0];
 
     unique case (operator_i)
-      ALU_B_BEXT : shifter_result =       32'h1 &  shifter_tmp[31:0];
+      ALU_B_BEXT : shifter_result =       32'h1 &  shifter_tmp_rev;
       ALU_B_BSET : shifter_result = operand_a_i |  shifter_tmp[31:0];
       ALU_B_BCLR : shifter_result = operand_a_i & ~shifter_tmp[31:0];
       ALU_B_BINV : shifter_result = operand_a_i ^  shifter_tmp[31:0];
