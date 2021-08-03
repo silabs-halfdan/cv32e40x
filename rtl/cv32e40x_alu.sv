@@ -182,7 +182,7 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   // Shift and add
 
   logic [31:0] result_shnadd;
-  
+
   assign result_shnadd = (operand_a_i << ((operator_i == ALU_B_SH1ADD) ? 1 : (operator_i == ALU_B_SH2ADD) ? 2 : 3)) + operand_b_i;
 
   //////////////////////////////////////////////////////////////////
