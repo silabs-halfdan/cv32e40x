@@ -282,29 +282,36 @@ module cv32e40x_alu import cv32e40x_pkg::*;
   //                       |___/                                       |_|                                     //
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  logic [63:0] clmul_result;
-  logic [63:0] clmul_shift_a;
-  logic [31:0] clmulr_result;
-  logic [31:0] clmulr_shift_a;
+  logic [31:0] operand_a_rev;
+  logic [31:0] operand_b_rev;
 
-  // CLMUL
+  logic [31:0] operand_a_clmul;
+  logic [31:0] operand_b_clmul;
+
+  logic [31:0] clmul_result;
+  logic [31:0] clmulr_result;
+  logic [31:0] clmulh_result;
+  generate
+    for (genvar k = 0; k < 32; k++) begin
+      assign operand_a_rev[k] = operand_a_i[31-k];
+      assign operand_b_rev[k] = operand_b_i[31-k];
+      assign clmulr_result[k] = clmul_result[31-k];
+    end
+  endgenerate
+
+  assign operand_a_clmul = (operator_i != ALU_B_CLMUL) ? operand_a_rev : operand_a_i;
+  assign operand_b_clmul = (operator_i != ALU_B_CLMUL) ? operand_b_rev : operand_b_i;
+
   always_comb begin
-    clmul_result  = '0;
-    clmul_shift_a = '0;
+    clmul_result ='0;
     for (integer i = 0; i < 32; i++) begin
-      clmul_shift_a = (operand_a_i << i);
-      if(operand_b_i[i]) clmul_result = clmul_result ^ clmul_shift_a;
+      for (integer j = 0; j < i+1; j++) begin
+        clmul_result[i] = clmul_result[i] ^ (operand_a_clmul[i-j] & operand_b_clmul[j]);
+      end
     end
   end
-  // CLMULR
-  always_comb begin
-    clmulr_result  = '0;
-    clmulr_shift_a = '0;
-    for (integer i = 0; i < 32; i++) begin
-      clmulr_shift_a = (operand_a_i >> (31 - i));
-      if(operand_b_i[i]) clmulr_result = clmulr_result ^ clmulr_shift_a;
-    end
-  end
+
+  assign clmulh_result = {1'b0, clmulr_result[31:1]};
 
   ////////////////////////////////////////////////////////
   //   ____                 _ _     __  __              //
@@ -369,8 +376,8 @@ module cv32e40x_alu import cv32e40x_pkg::*;
       ALU_B_SEXT_B : result_o = {{(24){operand_a_i[ 7]}}, operand_a_i[ 7:0]};
       ALU_B_SEXT_H : result_o = {{(16){operand_a_i[15]}}, operand_a_i[15:0]};
 
-      ALU_B_CLMUL  : result_o = clmul_result[31:0];
-      ALU_B_CLMULH : result_o = clmul_result[63:32];
+      ALU_B_CLMUL  : result_o = clmul_result;
+      ALU_B_CLMULH : result_o = clmulh_result;
       ALU_B_CLMULR : result_o = clmulr_result;
 
       default: ;
