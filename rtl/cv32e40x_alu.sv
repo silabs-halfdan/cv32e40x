@@ -257,12 +257,68 @@ module cv32e40x_alu import cv32e40x_pkg::*;
     end
   endgenerate
 
-  cv32e40x_ff_one ff_one_i
-  (
-    .in_i        ( clz_data_in ),
-    .first_one_o ( ff1_result  ),
-    .no_ones_o   ( ff_no_one   )
-  );
+  logic [31:0] [4:0] index_lut;
+  logic [31:0]       sel_nodes;
+  logic [31:0] [4:0] index_nodes;
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // generate tree structure
+  //////////////////////////////////////////////////////////////////////////////
+
+  generate
+    genvar j;
+    for (j = 0; j < 32; j++) begin : gen_index_lut
+      assign index_lut[j] = $unsigned(j);
+    end
+  endgenerate
+
+  generate
+    genvar k;
+    genvar l;
+    genvar level;
+    for (level = 0; level < 5; level++) begin : gen_tree
+    //------------------------------------------------------------
+    if (level < 5-1) begin : gen_non_root_level
+      for (l = 0; l < 2**level; l++) begin : gen_node
+        assign sel_nodes[2**level-1+l]   = sel_nodes[2**(level+1)-1+l*2] | sel_nodes[2**(level+1)-1+l*2+1];
+        assign index_nodes[2**level-1+l] = (sel_nodes[2**(level+1)-1+l*2] == 1'b1) ?
+                                           index_nodes[2**(level+1)-1+l*2] : index_nodes[2**(level+1)-1+l*2+1];
+      end
+    end
+    //------------------------------------------------------------
+    if (level == 5-1) begin : gen_root_level
+      for (k = 0; k < 2**level; k++) begin : gen_node
+        // if two successive indices are still in the vector...
+        if (k * 2 < 31) begin : gen_two
+          assign sel_nodes[2**level-1+k]   = clz_data_in[k*2] | clz_data_in[k*2+1];
+          assign index_nodes[2**level-1+k] = (clz_data_in[k*2] == 1'b1) ? index_lut[k*2] : index_lut[k*2+1];
+        end
+        // if only the first index is still in the vector...
+        if (k * 2 == 31) begin: gen_one
+          assign sel_nodes[2**level-1+k]   = clz_data_in[k*2];
+          assign index_nodes[2**level-1+k] = index_lut[k*2];
+        end
+        // if index is out of range
+        if (k * 2 > 31) begin : gen_out_of_range
+          assign sel_nodes[2**level-1+k]   = 1'b0;
+          assign index_nodes[2**level-1+k] = '0;
+        end
+      end
+    end
+    //------------------------------------------------------------
+    end
+  endgenerate
+
+  //////////////////////////////////////////////////////////////////////////////
+  // connect output
+  //////////////////////////////////////////////////////////////////////////////
+
+  assign ff1_result = index_nodes[0];
+  assign ff_no_one  = ~sel_nodes[0];
+
+
+  
 
   // Divider assumes CLZ returning 32 when there are no zeros (as per CLZ spec)
   assign div_clz_result_o = ff_no_one ? 6'd32 : ff1_result;
